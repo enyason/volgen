@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import validate_email
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from applications.models import Application, Submission
-from applications.serializers import ApplicationSerializer, SubmissionSerializer
+from applications.serializers import ApplicationSerializer, SubmissionSerializer, ApplicationWithSubmissionSerializer
 from users.models import User
 
 
@@ -63,9 +64,18 @@ class ApplicationView(APIView):
     def get(self, request, application_id):
         user = request.user
 
-        application = Application.objects.get(creator=user, id=application_id)
+        if type(user) is AnonymousUser:
+            application = Application.objects.get(id=application_id)
+            serializer = ApplicationSerializer(application)
+            data = {'application': serializer.data}
 
-        serializer = ApplicationSerializer(application)
+            return Response({'message': "Application deleted successfully",
+                             "data": data
+                             }, status=status.HTTP_200_OK)
+
+        application = Application.objects.get(id=application_id)
+
+        serializer = ApplicationWithSubmissionSerializer(application)
 
         data = {'application': serializer.data}
 
@@ -118,6 +128,10 @@ class SubmissionsView(APIView):
     def post(self, request, application_id):
 
         files: [InMemoryUploadedFile] = request.FILES.values()
+
+        print(type(files))
+
+        return Response({'message': "files successfully uploaded"})
 
         full_name = request.data.get('full_name')
         email = request.data.get('email')

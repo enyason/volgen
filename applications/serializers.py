@@ -10,6 +10,12 @@ class SubmissionSerializer(ModelSerializer):
 
 
 class ApplicationSerializer(ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ['id', 'title', 'description', 'date_created', 'date_modified']
+
+
+class ApplicationWithSubmissionSerializer(ModelSerializer):
     submissions = SubmissionSerializer(many=True, read_only=True)
 
     class Meta:
